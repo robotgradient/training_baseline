@@ -1,2 +1,2 @@
 from .generic_dataset import *
-from .lasa_dataset import V_S2LASA
+from .lasa_dataset import LASA

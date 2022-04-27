@@ -9,23 +9,27 @@ from lib_main import losses, trainer, summaries, models
 
 
 def parse_args():
+    # Configuration
     p = configargparse.ArgumentParser()
     p.add('-c', '--config_filepath', required=False, is_config_file=True, help='Path to config file.')
 
-    dirname = os.path.abspath(os.path.dirname(__file__+'/../../../../'))
+    dirname = os.path.abspath(os.path.dirname(__file__+'/../../'))
     p.add_argument('--saving_root', type=str, default=os.path.join(dirname, 'logs')
                    , help='root for saving logging')
 
-    p.add_argument('--experiment_name', type=str, required=False, default='pre_train_sdf_exp',
+    p.add_argument('--experiment_name', type=str, required=False, default='simple_exp',
                    help='Name of subdirectory in logging_root where summaries and checkpoints will be saved.')
 
     p.add_argument('--sidelength', type=int, default=128)
 
     # model parameters
-    p.add_argument('--z_dim', type=int, default=128)
+    p.add_argument('--in_dim', type=int, default=2)
+    p.add_argument('--out_dim', type=int, default=2)
+    p.add_argument('--hidden_dim', type=int, default=128)
+
 
     # General training options
-    p.add_argument('--batch_size', type=int, default=2)
+    p.add_argument('--batch_size', type=int, default=100)
     p.add_argument('--lr', type=float, default=1e-4, help='learning rate. default=5e-5')
     p.add_argument('--num_epochs', type=int, default=40001,
                    help='Number of epochs to train for.')
@@ -39,23 +43,17 @@ def parse_args():
 
     p.add_argument('--device',  type=str, default='cuda',)
 
-    p.add_argument('--depth_aug', action='store_true', help='depth_augmentation')
-    p.add_argument('--multiview_aug', action='store_true', help='multiview_augmentation')
-
     p.add_argument('--checkpoint_path', default=None, help='Checkpoint to trained model.')
-    p.add_argument('--dgcnn', action='store_true',
-                   help='If you want to use a DGCNN encoder instead of pointnet (requires more GPU memory)')
+
     opt = p.parse_args()
     return opt
 
 
 def get_model(opt, device):
-    ################# SDF MODEL #####################
-    ## Decoder ##
-    dec_sdf = DecoderInner(z_dim=3)
     ## Build model ##
-    occupancy_net = base.SDFNeuralField(decoder=dec_sdf).to(device)
-    return occupancy_net
+    model = models.SimpleModel(in_dim=opt.in_dim, out_dim=opt.out_dim,
+                               hidden_dim=opt.hidden_dim).to(device)
+    return model
 
 
 def main(opt):
@@ -66,8 +64,8 @@ def main(opt):
         device = torch.device('cpu')
 
     ## Dataset
-    train_dataset = datasets.AcronymSDFDataset(one_object=True)
-    train_dataloader = DataLoader(train_dataset, batch_size=opt.batch_size, shuffle=True,
+    lasa = datasets.LASA()
+    train_dataloader = DataLoader(lasa.dataset, batch_size=opt.batch_size, shuffle=True,
                                   drop_last=True)
 
     ## Model
@@ -77,7 +75,7 @@ def main(opt):
         model.load_state_dict(torch.load(opt.checkpoint_path))
 
     # Losses
-    loss = losses.SDFLoss()
+    loss = losses.L1Loss()
     loss_fn = val_loss_fn = loss.loss_fn
 
     # saving directories
@@ -85,7 +83,7 @@ def main(opt):
     exp_dir  = os.path.join(root_dir, opt.experiment_name)
 
     ## Summaries
-    summary = summaries.sdf_summary
+    summary = summaries.simple_summary
 
     # Train
     trainer.train(model=model, train_dataloader=train_dataloader, epochs=opt.num_epochs, model_dir= exp_dir,

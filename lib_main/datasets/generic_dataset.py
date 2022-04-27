@@ -175,4 +175,4 @@ class VDataset(torch.utils.data.Dataset):
         'Generates one sample of data'
         x = self.x_data[index,:]
         dx = self.dx_data[index, :]
-        return x,dx
+        return {'x':x}, {'dx':dx}

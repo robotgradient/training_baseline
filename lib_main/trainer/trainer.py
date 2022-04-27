@@ -66,7 +66,7 @@ def train(model, train_dataloader, epochs, lr, steps_til_summary, epochs_til_che
                     torch.save(model.state_dict(),
                                os.path.join(checkpoints_dir, 'model_current.pth'))
                     if summary_fn is not None:
-                        summary_fn(model, model_input, gt, iter_info, writer, total_steps)
+                        summary_fn(model, model_input, gt, iter_info, writer, total_steps, device=device)
 
                 for optim in optimizers:
                     optim.zero_grad()
@@ -109,7 +109,8 @@ def train(model, train_dataloader, epochs, lr, steps_til_summary, epochs_til_che
                         for loss_name, loss in val_losses.items():
                             single_loss = np.mean(loss)
                             if summary_fn is not None:
-                                summary_fn(model, model_input, gt, val_iter_info, writer, total_steps, 'val_')
+                                summary_fn(model, model_input, gt, val_iter_info, writer, total_steps, 'val_',
+                                           device=device)
                                 writer.add_scalar('val_' + loss_name, single_loss, total_steps)
 
                         model.train()

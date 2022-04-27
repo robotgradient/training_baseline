@@ -1,16 +1,18 @@
 import os, sys, time
 import json
+
+import matplotlib.pyplot as plt
 import numpy as np
 import scipy.io as spio
 import torch
-from liesvf.dataset.generic_dataset import VDataset
-from liesvf import visualization as vis
+from lib_main.datasets.generic_dataset import VDataset
+from lib_main import visualization as vis
 
 directory = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..','data')) + '/LASA_dataset/'
 directory_s2 = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..','data')) + '/LASA_S2_dataset/'
 
 
-class V_S2LASA():
+class LASA():
     def __init__(self, filename='Sshape', PLOT=False):
         ## Define Variables and Load trajectories ##
         self.filename = filename
@@ -44,16 +46,9 @@ class V_S2LASA():
 
         ## VISUALIZE ##
         if PLOT:
-            import pyvista as pv
-            pv.set_plot_theme("document")
-            p = pv.Plotter()
-            sphere = vis.visualize_sphere(p)
-            vis.visualize_s2_tangent_trajectories(p,self.train_data[0])
-            def policy(x):
-                return -x
-            vis.visualize_s2_vector_field(p,policy)
-            p.show()
-            pv.close_all()
+            fig, ax = plt.subplots()
+            vis.visualize_trajectories(self.train_data[0], ax=ax)
+            plt.show()
 
     def normalize(self, trjs):
         min_trjs = np.min(trjs)
@@ -71,10 +66,14 @@ class V_S2LASA():
 
 
 if __name__ == "__main__":
+    from torch.utils.data import DataLoader
+
     ##### S2_models ####
     filename = 'CShape'
     device = torch.device('cpu')
-    lasa = V_S2LASA(filename, PLOT=True)
-    print(lasa)
 
-    trj = lasa.trajs_normal[0,:,:]
+    lasa = LASA(filename, PLOT=True)
+    train_dataloader = DataLoader(lasa.dataset, batch_size=5, shuffle=True)
+
+    for x,y in train_dataloader:
+        print(x)

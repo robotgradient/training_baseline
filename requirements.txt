@@ -1,1 +1,6 @@
 numpy
+torch
+torchvision
+tensorboard
+tqdm
+ConfigArgParse

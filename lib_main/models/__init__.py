@@ -1,1 +1,3 @@
-from .layers import ResnetBlockFC
+from .layers import ResnetBlockFC, FCNN
+
+from .model import SimpleModel
