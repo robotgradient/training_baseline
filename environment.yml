@@ -1,0 +1,17 @@
+name: lib_main_env
+channels:
+  - pytorch
+  - conda-forge
+dependencies:
+  - python=3.7
+  - pytorch
+  - torchvision
+  - torchaudio
+  - pyzmq
+  - pytest
+  - colorlog
+  - pandas
+  - seaborn
+  - tabulate
+  - pip
+  - matplotlib
